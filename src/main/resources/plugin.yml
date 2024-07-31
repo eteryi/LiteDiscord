@@ -1,0 +1,6 @@
+name: LiteDiscord
+version: '${project.version}'
+main: dev.etery.litebow.discord.LiteDiscord
+depend:
+  - "LiteCoin"
+  - "LiteCosmetics"
