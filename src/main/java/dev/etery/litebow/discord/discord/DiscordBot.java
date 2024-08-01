@@ -3,6 +3,7 @@ package dev.etery.litebow.discord.discord;
 import dev.etery.litebow.discord.discord.listener.BasicListener;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
@@ -24,9 +25,10 @@ public class DiscordBot {
         this.commands = new HashMap<>();
     }
 
-    public void load() throws InterruptedException {
+    public void load(Activity.ActivityType type, String message) throws InterruptedException {
         instance = JDABuilder.createDefault(token)
                 .addEventListeners(new BasicListener(this))
+                .setActivity(Activity.of(type, message))
                 .build().awaitReady();
     }
 

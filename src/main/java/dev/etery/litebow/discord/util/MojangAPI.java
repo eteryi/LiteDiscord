@@ -1,6 +1,7 @@
 package dev.etery.litebow.discord.util;
 
 import com.google.gson.GsonBuilder;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
@@ -11,21 +12,34 @@ import java.util.Scanner;
 import java.util.UUID;
 
 public class MojangAPI {
-    private static final HashMap<String, UUID> username2uuidCache = new HashMap<>();
+    private static final HashMap<String, UserResponse> username2resCache = new HashMap<>();
 
-    private static class MojangUserResponse {
-        private final String id;
-        private final String name;
+    public static class UserResponse {
+        public static final UserResponse NONE = new UserResponse("469433051ddb4db7985d9242acc77a3e", " ");
 
-        private MojangUserResponse(String id, String name) {
+        public final String id;
+        public final String name;
+
+        public UserResponse(String id, String name) {
             this.id = id;
             this.name = name;
         }
+
+        public UUID getUUID() {
+            return UUID.fromString(id.replaceFirst(
+                    "(\\p{XDigit}{8})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}+)", "$1-$2-$3-$4-$5"
+            ));
+        }
+
+        @Override
+        public String toString() {
+            return String.format("{name: %s, id: %s}", name, id);
+        }
     }
 
-    public static @Nullable UUID getUUIDFromUsername(String username) {
-        if (username2uuidCache.get(username) != null) {
-            return username2uuidCache.get(username);
+    public static @NotNull UserResponse getUUIDFromUsername(String username) {
+        if (username2resCache.get(username) != null) {
+            return username2resCache.get(username);
         }
 
         try {
@@ -41,14 +55,11 @@ public class MojangAPI {
                     builder.append(scanner.nextLine());
                 }
                 String rawJson = builder.toString();
-                MojangUserResponse response = new GsonBuilder().create().fromJson(rawJson, MojangUserResponse.class);
-                UUID uuid = UUID.fromString(response.id.replaceFirst(
-                        "(\\p{XDigit}{8})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}+)", "$1-$2-$3-$4-$5"
-                ));
-                username2uuidCache.put(username, uuid);
-                return uuid;
+                UserResponse response = new GsonBuilder().create().fromJson(rawJson, UserResponse.class);
+                username2resCache.put(username, response);
+                return response;
             }
-            return null;
+            return UserResponse.NONE;
 
         } catch (IOException e) {
             throw new RuntimeException(e);

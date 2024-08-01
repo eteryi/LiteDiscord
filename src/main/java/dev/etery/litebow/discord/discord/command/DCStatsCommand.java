@@ -8,16 +8,19 @@ import dev.etery.litebow.discord.discord.DiscordBot;
 import dev.etery.litebow.discord.util.MojangAPI;
 import me.stephenminer.litecoin.LiteCoin;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.entity.Player;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 public class DCStatsCommand implements DiscordBot.Command {
@@ -29,20 +32,9 @@ public class DCStatsCommand implements DiscordBot.Command {
         this.cosmetics = cosmetics;
     }
 
-    @Override
-    public void execute(SlashCommandInteractionEvent event) {
-        String username = event.getOption("username").getAsString();
-        OfflinePlayer player = Bukkit.getPlayer(username);
+    private MessageEmbed from(UUID uuid, String username) {
 
-        if (player == null) {
-            UUID uuid = MojangAPI.getUUIDFromUsername(username);
-            if (uuid == null) {
-                event.reply("Couldn't find player").setEphemeral(true).queue();
-                return;
-            }
-            player = Bukkit.getOfflinePlayer(uuid);
-        }
-
+        OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
         CosmeticPlayer cosmeticPlayer = cosmetics.player(player);
 
         EmbedBuilder embed = new EmbedBuilder()
@@ -73,7 +65,22 @@ public class DCStatsCommand implements DiscordBot.Command {
             });
             embed.addField("`" +it.getDisplayName() + "  →`", value.toString(), false);
         });
+        return embed.build();
+    }
 
-        event.replyEmbeds(embed.build()).setEphemeral(true).queue();
+    @Override
+    public void execute(SlashCommandInteractionEvent event) {
+        event.deferReply().queue();
+        String username = event.getOption("username").getAsString();
+        Player player = Bukkit.getPlayer(username);
+        MessageEmbed embed;
+        if (player == null) {
+            MojangAPI.UserResponse res = MojangAPI.getUUIDFromUsername(username);
+            embed = from(res.getUUID(), res.name);
+        } else {
+            embed = from(player.getUniqueId(), player.getName());
+        }
+
+        event.getHook().sendMessageEmbeds(embed).queue();
     }
 }
