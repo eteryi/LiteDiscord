@@ -7,6 +7,7 @@ import dev.etery.litecosmetics.data.CosmeticPlayer;
 import dev.etery.litebow.discord.discord.DiscordBot;
 import dev.etery.litebow.discord.util.MojangAPI;
 import me.stephenminer.litecoin.LiteCoin;
+import me.stephenminer.litecoin.util.Profile;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -35,12 +36,19 @@ public class DCStatsCommand implements DiscordBot.Command {
     private MessageEmbed from(UUID uuid, String username) {
 
         OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
+        Profile profile = coin.profiles.getOrDefault(uuid, new Profile(uuid,0 ,0 ,0));
         CosmeticPlayer cosmeticPlayer = cosmetics.player(player);
 
         EmbedBuilder embed = new EmbedBuilder()
                 .setTitle(username + "'s stats")
                 .setDescription("```json\n" +
-                        "ʟɪᴛᴇᴄᴏɪɴ : " + coin.getBalance(player) + "```")
+                        "ʟɪᴛᴇᴄᴏɪɴ : " + coin.getBalance(player) + "\n" +
+                        "ɢᴀᴍʙʟɪɴɢ ꜱᴛᴀᴛꜱ →" + "\n" +
+                        "| ᴡɪɴꜱ: " + profile.wins() + "\n" +
+                        "| ʟᴏꜱꜱᴇꜱ: " + profile.losses() + "\n" +
+                        "| ʀᴀᴛɪᴏ: " + profile.ratio() + "\n" +
+                        "| ᴛᴏᴛᴀʟ ᴘʀᴏꜰɪᴛ: " + profile.gambleProfit() + "\n" +
+                        "```")
                 .setThumbnail("https://skins.mcstats.com/bust/" + player.getUniqueId())
                 .setFooter("litebow.net")
                 .setTimestamp(LocalDateTime.now());
